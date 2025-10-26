@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Carry Mark</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f4f4f4;
+        transition: background 0.3s, color 0.3s;
+    }
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+    .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: background 0.3s, color 0.3s;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+    }
+    th {
+        background: #eee;
+    }
+    input[type="text"], input[type="number"] {
+        width: 90%;
+        padding: 5px;
+        text-align: center;
+    }
+    button {
+        padding: 10px 15px;
+        margin: 10px 5px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #45a049;
+    }
+    .delete-btn {
+        background: #e74c3c;
+    }
+    .delete-btn:hover {
+        background: #c0392b;
+    }
+    .reset-btn {
+        background: #f39c12;
+    }
+    .reset-btn:hover {
+        background: #d68910;
+    }
+    .result {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+    }
+    .switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+    }
+
+    /* ===================== DARK MODE ===================== */
+    .dark-mode {
+        background: #121212;
+        color: #f4f4f4;
+    }
+    .dark-mode .container {
+        background: #1f1f1f;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(255,255,255,0.1);
+    }
+    .dark-mode table {
+        border-color: #444;
+    }
+    .dark-mode th {
+        background: #333;
+        color: #f4f4f4;
+    }
+    .dark-mode td {
+        border-color: #444;
+    }
+    .dark-mode input[type="text"],
+    .dark-mode input[type="number"] {
+        background: #333;
+        color: #f4f4f4;
+        border: 1px solid #555;
+    }
+    .dark-mode button {
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+    }
+    .dark-mode button:hover {
+        background: #444;
+    }
+    .dark-mode .delete-btn {
+        background: #b33939;
+    }
+    .dark-mode .delete-btn:hover {
+        background: #993333;
+    }
+    .dark-mode .reset-btn {
+        background: #a67c00;
+    }
+    .dark-mode .reset-btn:hover {
+        background: #8a6d00;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kalkulator Carry Mark</h1>
+
+    <!-- Dark Mode Switch -->
+    <div class="switch">
+        <label>Mode Gelap:</label>
+        <input type="checkbox" id="darkModeToggle">
+    </div>
+
+    <label>Nama Pelajar: </label>
+    <input type="text" id="studentName" placeholder="Masukkan nama pelajar"><br><br>
+
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Peratus (%)</th>
+                <th>Markah Diperoleh</th>
+                <th>Tindakan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" value="Test 1"></td>
+                <td><input type="number" value="20" min="1" max="100" onchange="validatePercentage()"></td>
+                <td><input type="number" value="0" min="0" max="100"></td>
+                <td><button onclick="deleteRow(this)">Padam</button></td>
+            </tr>
+            <tr>
+                <td><input type="text" value="Test 2"></td>
+                <td><input type="number" value="20" min="1" max="100" onchange="validatePercentage()"></td>
+                <td><input type="number" value="0" min="0" max="100"></td>
+                <td><button onclick="deleteRow(this)">Padam</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button onclick="addTask()">Tambah Task</button>
+    <button onclick="calculateMark()">Kira Carry Mark</button>
+    <button onclick="resetAll()" class="reset-btn">Reset Semua</button>
+
+    <div class="result" id="result"></div>
+
+    <h2>Senarai Pelajar Selesai</h2>
+    <table id="studentList">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Pelajar</th>
+                <th>Markah Akhir (%)</th>
+                <th>Tindakan</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+let studentCount = 0;
+
+function addTask() {
+    const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+    const newRow = table.insertRow();
+    newRow.innerHTML = `
+        <td><input type="text" value="Task Baru"></td>
+        <td><input type="number" value="10" min="1" max="100" onchange="validatePercentage()"></td>
+        <td><input type="number" value="0" min="0" max="100"></td>
+        <td><button onclick="deleteRow(this)">Padam</button></td>
+    `;
+}
+
+function deleteRow(button) {
+    const row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+}
+
+function validatePercentage() {
+    const rows = document.querySelectorAll('#taskTable tbody tr');
+    let totalPercent = 0;
+    rows.forEach(row => {
+        const percent = parseFloat(row.cells[1].querySelector('input').value) || 0;
+        totalPercent += percent;
+    });
+
+    if (totalPercent > 100) {
+        alert("Jumlah peratusan melebihi 100%! Sila betulkan.");
+    }
+}
+
+function calculateMark() {
+    const studentName = document.getElementById('studentName').value;
+    const rows = document.querySelectorAll('#taskTable tbody tr');
+    let totalPercent = 0;
+    let totalMark = 0;
+
+    rows.forEach(row => {
+        const percent = parseFloat(row.cells[1].querySelector('input').value) || 0;
+        const score = parseFloat(row.cells[2].querySelector('input').value) || 0;
+        totalPercent += percent;
+        totalMark += (score * percent / 100);
+    });
+
+    if (totalPercent !== 100) {
+        document.getElementById('result').innerHTML = `<span style="color:red;">Jumlah peratusan mesti 100%! (Sekarang: ${totalPercent}%)</span>`;
+    } else if (studentName === "") {
+        document.getElementById('result').innerHTML = `<span style="color:red;">Sila masukkan nama pelajar!</span>`;
+    } else {
+        document.getElementById('result').innerHTML = `Nama: ${studentName}<br>Markah Akhir: ${totalMark.toFixed(2)}%`;
+
+        // Masukkan ke senarai pelajar
+        studentCount++;
+        const table = document.getElementById('studentList').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+        newRow.innerHTML = `
+            <td>${studentCount}</td>
+            <td>${studentName}</td>
+            <td>${totalMark.toFixed(2)}</td>
+            <td><button class="delete-btn" onclick="deleteStudentRow(this)">Padam</button></td>
+        `;
+
+        // Reset input selepas simpan
+        document.getElementById('studentName').value = "";
+        rows.forEach(row => {
+            row.cells[2].querySelector('input').value = 0;
+        });
+    }
+}
+
+function deleteStudentRow(button) {
+    const row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+}
+
+// Dark Mode Toggle
+document.getElementById('darkModeToggle').addEventListener('change', function() {
+    document.body.classList.toggle('dark-mode', this.checked);
+});
+
+// Reset Semua
+function resetAll() {
+    if (confirm("Adakah anda pasti mahu reset semua data?")) {
+        document.getElementById('studentName').value = "";
+        document.querySelector('#studentList tbody').innerHTML = "";
+        studentCount = 0;
+        document.getElementById('result').innerHTML = "";
+    }
+}
+</script>
+
+</body>
+</html>
